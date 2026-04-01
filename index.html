@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>飞跃蛋蛋</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <canvas id="game" aria-label="飞跃蛋蛋游戏画布 - 控制骑电动车的猫越过障碍" role="img"></canvas>
+
+      <div id="ui" class="ui-layer">
+        <section id="menu" class="overlay" aria-labelledby="titleText">
+          <div class="title" id="titleText">飞跃蛋蛋</div>
+          <img id="imgTitle" class="ui-img-title" alt="" aria-hidden="true" />
+          
+          <div class="hint" id="hintText">点击屏幕，越过障碍物</div>
+          <img id="imgHint" class="ui-img-hint" alt="" aria-hidden="true" />
+          
+          <button id="btnStart" class="pixel-btn" aria-label="开始游戏">
+            <span class="btn-text" id="startText">开始游戏</span>
+            <img id="imgStartBtn" class="ui-img-btn" alt="" aria-hidden="true" />
+          </button>
+        </section>
+
+        <section id="hud" class="hud">
+          <div class="hud-left">HI-SCORE: <span id="hiScore" aria-live="polite">0</span></div>
+          <div class="hud-right">SCORE: <span id="score" aria-live="polite">0</span></div>
+        </section>
+
+        <section id="gameOver" class="overlay overlay-hidden" aria-labelledby="gameOverText">
+          <div class="title title-over" id="gameOverText">GAME OVER</div>
+          <img id="imgGameOver" class="ui-img-gameover" alt="" aria-hidden="true" />
+          
+          <div class="hint hint-over">最终得分：<span id="finalScore">0</span></div>
+          
+          <button id="btnRestart" class="pixel-btn" aria-label="再来一次">
+            <span class="btn-text" id="retryText">再来一次</span>
+            <img id="imgRetryBtn" class="ui-img-btn" alt="" aria-hidden="true" />
+          </button>
+        </section>
+      </div>
+    </main>
+
+    <script src="./main.js" defer></script>
+  </body>
+</html>

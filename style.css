@@ -1,0 +1,113 @@
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* 修改 2：将起始页面的背景由黑色改为天蓝色 */
+    background-color: #87CEEB; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 600px; /* 模拟移动端宽度 */
+    background-color: #000; /* 游戏画布容器保持黑色，或根据需要调整 */
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated; /* 保持像素艺术不模糊 */
+}
+
+/* UI 层级 */
+.ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 让点击穿透到 Canvas，除非是按钮 */
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(135, 206, 235, 0.8); /* 起始遮罩层也改为半透明天蓝色 */
+    pointer-events: auto;
+}
+
+/* 游戏名称样式 */
+.title {
+    font-size: 32px;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 2px 2px 0px #000;
+    /* 修改 1：增加与下方按钮/提示的间距 */
+    margin-bottom: 60px; 
+}
+
+.hint {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* 按钮样式 */
+.pixel-btn {
+    padding: 10px 25px;
+    background-color: #ffcc00;
+    border: 4px solid #000;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.1s;
+}
+
+.pixel-btn:active {
+    transform: scale(0.95);
+}
+
+.btn-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+}
+
+/* HUD 样式 */
+.hud {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    font-family: monospace;
+    font-size: 18px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.overlay-hidden {
+    display: none;
+}
+
+/* 隐藏原始图片标签（如果你还没准备好图片资源） */
+.ui-img-title, .ui-img-hint, .ui-img-btn, .ui-img-gameover, .ui-img-retry {
+    display: none;
+}
