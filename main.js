@@ -181,15 +181,16 @@ let accel = 18;
 let gravity = 2200;
 let player = null;
 const obstacles = [];
+
 let eggSpawnIn = 800; 
-let birdSpawnIn = 1200;
+let birdSpawnIn = 1500; 
+
 let dead = false;
 let deathElapsed = 0;
 let birdAnimT = 0;
 let lastTs = 0;
-let ignoreFirstJump = false; 
 
-const JUMP = { smallVel: 600, bigVel: 980, longPressMs: 180 }; // 缩短长按判定，提高灵敏度
+const JUMP = { smallVel: 600, bigVel: 980, longPressMs: 180 };
 const DEATH_DURATION = 0.55;
 const CAT_RUN_FPS = 12;
 const BIRD_FPS = 10;
@@ -278,8 +279,9 @@ function drawObstacle(o) {
     const img = getImg(`seagull${frame + 1}`);
     ctx.save();
     ctx.translate(o.x + o.w/2, o.y + o.h/2);
-    ctx.scale(o.flip, 1);
+    ctx.scale(-1, 1); 
     if (img) ctx.drawImage(img, -o.w/2, -o.h/2, o.w, o.h);
+    else { ctx.fillStyle = "#fff"; ctx.fillRect(-o.w/2, -o.h/2, o.w, o.h); }
     ctx.restore();
   }
 }
@@ -287,7 +289,6 @@ function drawObstacle(o) {
 // ---------- 5. 游戏逻辑 ----------
 function resetGame() {
   state = GameState.playing;
-  ignoreFirstJump = true; 
   ui.menu.classList.add("overlay-hidden");
   ui.gameOver.classList.add("overlay-hidden");
   ui.hudLeft.textContent = String(localStorage.getItem("hiScore") || 0);
@@ -297,9 +298,14 @@ function resetGame() {
   obstacles.length = 0;
   dead = false;
   deathElapsed = 0;
+  
+  eggSpawnIn = 800;
+  birdSpawnIn = 1800;
+
   const pW = Math.max(42, world.h * 0.10);
   const pH = Math.max(58, world.h * 0.14);
   player = { w: pW, h: pH, x: world.playerX, y: world.groundY - pH, vy: 0, onGround: true, deadT: 0 };
+  
   audio.startBackground();
   lastTs = performance.now();
   requestAnimationFrame(loop);
@@ -320,7 +326,24 @@ function loop(ts) {
     if (eggSpawnIn <= 0) {
       const eggSize = Math.max(22, world.h * 0.055);
       obstacles.push({ type: "egg", x: world.w + 60, y: world.groundY - eggSize * 1.6, w: eggSize, h: eggSize * 1.6 });
-      eggSpawnIn = 600 + Math.random() * 500;
+      eggSpawnIn = 700 + Math.random() * 600;
+    }
+
+    birdSpawnIn -= speed * dt;
+    if (birdSpawnIn <= 0) {
+      const bW = Math.max(50, world.h * 0.12);
+      const bH = bW * 0.8;
+      const randomY = world.h * (0.4 + Math.random() * 0.3); 
+      obstacles.push({ 
+        type: "bird", 
+        x: world.w + 100, 
+        y: randomY, 
+        w: bW, 
+        h: bH, 
+        phase: Math.random() * 10,
+        flySpeed: speed * 1.2 
+      });
+      birdSpawnIn = 1200 + Math.random() * 1000;
     }
 
     if (!player.onGround) {
@@ -340,8 +363,11 @@ function loop(ts) {
     const pw = player.w * pShrinkX;
     const ph = player.h * pShrinkY;
 
-    for (const o of obstacles) {
-      o.x -= speed * dt;
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const o = obstacles[i];
+      const moveSpeed = o.type === "bird" ? (o.flySpeed || speed) : speed;
+      o.x -= moveSpeed * dt;
+      if (o.x < -200) { obstacles.splice(i, 1); continue; }
       const ox = o.x + o.w * 0.2;
       const oy = o.y + o.h * 0.2;
       const ow = o.w * 0.6;
@@ -373,14 +399,13 @@ function loop(ts) {
   requestAnimationFrame(loop);
 }
 
-// ---------- 6. 交互核心：全局全屏监听 ----------
+// ---------- 6. 交互核心：一键即跳优化版 ----------
 let jumpTimer = null;
 let longJumpTriggered = false;
 
-// 监听整个窗口，而不仅仅是 canvas
 window.addEventListener("pointerdown", (e) => {
-  // 如果点的是按钮，让按钮原本的点击逻辑处理
-  if (e.target.tagName === "BUTTON" || e.target.closest("button")) return;
+  // 如果点的是 UI 按钮，则不触发跳跃逻辑
+  if (e.target.closest("button")) return;
 
   if (state === GameState.menu) {
     resetGame();
@@ -388,10 +413,9 @@ window.addEventListener("pointerdown", (e) => {
   }
   
   if (state === GameState.playing) {
-    if (ignoreFirstJump) return; 
     if (player.onGround) {
       longJumpTriggered = false;
-      // 这里的 jumpTimer 处理长按大跳
+      // 开启长按判定
       jumpTimer = setTimeout(() => {
         player.vy = -JUMP.bigVel;
         player.onGround = false;
@@ -403,22 +427,21 @@ window.addEventListener("pointerdown", (e) => {
 });
 
 window.addEventListener("pointerup", (e) => {
-  if (ignoreFirstJump) {
-    ignoreFirstJump = false;
-    return;
-  }
+  // 如果点的是按钮，跳过逻辑
+  if (e.target.closest("button")) return;
 
-  if (state === GameState.playing && !longJumpTriggered && player.onGround) {
-    // 如果还没触发大跳就松开了，执行小跳
-    clearTimeout(jumpTimer);
-    player.vy = -JUMP.smallVel;
-    player.onGround = false;
-    audio.jumpSound("small");
+  if (state === GameState.playing) {
+    if (!longJumpTriggered && player.onGround) {
+      // 快速松手，触发小跳
+      clearTimeout(jumpTimer);
+      player.vy = -JUMP.smallVel;
+      player.onGround = false;
+      audio.jumpSound("small");
+    }
   }
   longJumpTriggered = false;
 });
 
-// 单独处理按钮
 ui.btnStart.addEventListener("click", (e) => { e.stopPropagation(); resetGame(); });
 ui.btnRestart.addEventListener("click", (e) => { e.stopPropagation(); resetGame(); });
 
